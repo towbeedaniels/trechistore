@@ -4,11 +4,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
 import Link from 'next/link';
+import { countries } from '@/data/countries';
+import { supabase } from '@/lib/supabase';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalPrice, clearCart } = useCart();
   const [step, setStep] = useState(1);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -33,14 +36,68 @@ export default function CheckoutPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const placeOrder = async () => {
+    setIsProcessing(true);
+    
+    const orderNumber = 'TRECHI-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+    
+    try {
+      // Insert order into Supabase
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert([{
+          order_number: orderNumber,
+          customer_name: `${formData.firstName} ${formData.lastName}`,
+          customer_email: formData.email,
+          customer_phone: formData.phone,
+          shipping_address: formData.address,
+          shipping_city: formData.city,
+          shipping_state: formData.state,
+          shipping_zip: formData.zipCode,
+          shipping_country: formData.country,
+          subtotal: totalPrice,
+          shipping_cost: shipping,
+          tax: tax,
+          total: grandTotal,
+          status: 'pending'
+        }])
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Insert order items
+      const orderItems = items.map(item => ({
+        order_id: orderData.id,
+        product_id: item.id,
+        product_name: item.name,
+        quantity: item.quantity,
+        price: item.price
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      // Clear cart and redirect
+      clearCart();
+      router.push(`/order-confirmed?order=${orderNumber}`);
+    } catch (error) {
+      console.error('Order error:', error);
+      alert('There was an error processing your order. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (step < 3) {
       setStep(step + 1);
     } else {
-      // Process order
-      clearCart();
-      router.push('/order-confirmed');
+      placeOrder();
     }
   };
 
@@ -225,7 +282,7 @@ export default function CheckoutPage() {
                           className="input-field"
                         />
                       </div>
-                      <div>
+                      <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Country
                         </label>
@@ -235,12 +292,11 @@ export default function CheckoutPage() {
                           onChange={handleChange}
                           className="input-field"
                         >
-                          <option>United States</option>
-                          <option>Canada</option>
-                          <option>United Kingdom</option>
-                          <option>Australia</option>
-                          <option>Germany</option>
-                          <option>France</option>
+                          {countries.map((country) => (
+                            <option key={country} value={country}>
+                              {country}
+                            </option>
+                          ))}
                         </select>
                       </div>
                     </div>
@@ -321,7 +377,7 @@ export default function CheckoutPage() {
                     <h2 className="text-2xl font-serif font-bold text-gray-900 mb-6">
                       Review Your Order
                     </h2>
-                    
+
                     <div className="mb-6">
                       <h3 className="font-semibold text-gray-900 mb-3">Shipping Address</h3>
                       <p className="text-gray-600">
@@ -355,12 +411,17 @@ export default function CheckoutPage() {
                       type="button"
                       onClick={() => setStep(step - 1)}
                       className="btn-secondary flex-1"
+                      disabled={isProcessing}
                     >
                       Back
                     </button>
                   )}
-                  <button type="submit" className="btn-primary flex-1">
-                    {step === 3 ? `Place Order - $${grandTotal.toFixed(2)}` : 'Continue'}
+                  <button 
+                    type="submit" 
+                    className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isProcessing}
+                  >
+                    {isProcessing ? 'Processing...' : (step === 3 ? `Place Order - $${grandTotal.toFixed(2)}` : 'Continue')}
                   </button>
                 </div>
               </div>
@@ -370,7 +431,7 @@ export default function CheckoutPage() {
             <div className="lg:col-span-1">
               <div className="bg-white rounded-xl shadow-lg p-6 sticky top-24">
                 <h3 className="text-xl font-serif font-bold text-gray-900 mb-4">Order Summary</h3>
-                
+
                 <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
                   {items.map((item) => (
                     <div key={item.id} className="flex gap-3">

@@ -9,8 +9,16 @@ A modern, full-featured e-commerce application for a luxury perfume store built 
 - 🛍️ **Full E-Commerce Functionality**
   - Product catalog with filtering and search
   - Shopping cart with quantity management
-  - Multi-step checkout process
-  - Order confirmation
+  - Multi-step checkout process with 190+ countries
+  - Order confirmation with order tracking
+  - Orders saved to Supabase database
+
+- 👨‍💼 **Admin Dashboard**
+  - Secure admin authentication
+  - Dashboard with sales statistics
+  - Orders management with status updates
+  - Products CRUD (Create, Read, Update, Delete)
+  - Real-time inventory management
 
 - 🎨 **Modern UI/UX**
   - Responsive design for all devices
@@ -27,12 +35,17 @@ A modern, full-featured e-commerce application for a luxury perfume store built 
   - About Us page
   - Contact page
   - Order confirmation page
+  - Shipping information page
+  - Returns & exchanges page
+  - FAQ page
+  - Admin dashboard, orders, and products pages
 
 - ⚡ **Technical Features**
   - Next.js 15 App Router
   - TypeScript for type safety
   - Tailwind CSS for styling
   - React Context for state management
+  - Supabase for database
   - Server and Client Components
   - Static and Dynamic rendering
 
