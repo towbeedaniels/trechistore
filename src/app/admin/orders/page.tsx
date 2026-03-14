@@ -11,8 +11,8 @@ export default function AdminOrders() {
   const [isLoading, setIsLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
   const [filter, setFilter] = useState<string>('all');
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [showModal, setShowModal] = useState(false);
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [updateMessage, setUpdateMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   useEffect(() => {
     const adminUser = localStorage.getItem('adminUser');
@@ -30,42 +30,54 @@ export default function AdminOrders() {
         setOrders([]);
         return;
       }
-      
+
       let query = supabase.from('orders').select('*');
-      
+
       if (filter !== 'all') {
         query = query.eq('status', filter);
       }
-      
+
       const { data, error } = await query.order('created_at', { ascending: false });
-      
+
       if (error) throw error;
       setOrders(data || []);
     } catch (error) {
       console.error('Orders error:', error);
+      setUpdateMessage({ type: 'error', text: 'Failed to load orders' });
     }
   };
 
   const updateOrderStatus = async (orderId: number, status: string) => {
+    setUpdatingId(orderId);
+    setUpdateMessage(null);
+    
     try {
       if (!supabase) {
-        alert('Database not configured');
+        setUpdateMessage({ type: 'error', text: 'Database not configured. Check your Supabase settings.' });
+        setUpdatingId(null);
         return;
       }
-      
+
       const { error } = await supabase
         .from('orders')
         .update({ status })
         .eq('id', orderId);
 
-      if (error) throw error;
-      
+      if (error) {
+        console.error('Supabase error:', error);
+        setUpdateMessage({ type: 'error', text: `Error: ${error.message}` });
+        setUpdatingId(null);
+        return;
+      }
+
+      setUpdateMessage({ type: 'success', text: 'Order status updated successfully!' });
       fetchOrders();
-      setShowModal(false);
-      setSelectedOrder(null);
     } catch (error) {
       console.error('Update error:', error);
-      alert('Failed to update order status');
+      setUpdateMessage({ type: 'error', text: 'Failed to update order status' });
+    } finally {
+      setUpdatingId(null);
+      setTimeout(() => setUpdateMessage(null), 5000);
     }
   };
 
@@ -74,8 +86,8 @@ export default function AdminOrders() {
     router.push('/admin/login');
   };
 
-  const filteredOrders = filter === 'all' 
-    ? orders 
+  const filteredOrders = filter === 'all'
+    ? orders
     : orders.filter(o => o.status === filter);
 
   return (
@@ -119,6 +131,25 @@ export default function AdminOrders() {
         </header>
 
         <div className="p-8">
+          {/* Status Message */}
+          {updateMessage && (
+            <div className={`mb-6 p-4 rounded-lg ${
+              updateMessage.type === 'success' 
+                ? 'bg-green-50 border border-green-200 text-green-800' 
+                : 'bg-red-50 border border-red-200 text-red-800'
+            }`}>
+              {updateMessage.text}
+            </div>
+          )}
+
+          {/* Database Warning */}
+          {!supabase && (
+            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800">
+              <strong>Warning:</strong> Database not configured. Orders are not being saved. 
+              Please ensure your Supabase credentials are set correctly in .env.local
+            </div>
+          )}
+
           {/* Filters */}
           <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
             <div className="flex flex-wrap gap-2">
@@ -147,7 +178,6 @@ export default function AdminOrders() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order #</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Country</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
@@ -157,8 +187,8 @@ export default function AdminOrders() {
                 <tbody className="divide-y divide-gray-200">
                   {filteredOrders.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
-                        No orders found.
+                      <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                        No orders found. Orders will appear here when customers checkout.
                       </td>
                     </tr>
                   ) : (
@@ -170,7 +200,6 @@ export default function AdminOrders() {
                           <span className="text-xs text-gray-400">{order.shipping_city}, {order.shipping_country}</span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{order.customer_email}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{order.shipping_country}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{formatCurrency(order.total)}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-3 py-1 text-xs font-medium rounded-full ${
@@ -186,16 +215,20 @@ export default function AdminOrders() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(order.created_at).toLocaleDateString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <button
-                            onClick={() => {
-                              setSelectedOrder(order);
-                              setShowModal(true);
-                            }}
-                            className="text-primary-600 hover:text-primary-800 font-medium"
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {/* Quick Status Dropdown */}
+                          <select
+                            value={order.status}
+                            onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                            disabled={updatingId === order.id}
+                            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none bg-white disabled:opacity-50"
                           >
-                            Update
-                          </button>
+                            <option value="pending">Pending</option>
+                            <option value="processing">Processing</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
                         </td>
                       </tr>
                     ))
@@ -204,46 +237,19 @@ export default function AdminOrders() {
               </table>
             </div>
           </div>
-        </div>
-      </main>
 
-      {/* Update Status Modal */}
-      {showModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-            <h3 className="text-xl font-serif font-bold text-gray-900 mb-4">
-              Update Order Status
-            </h3>
-            <p className="text-gray-600 mb-4">Order: {selectedOrder.order_number}</p>
-            
-            <div className="space-y-2 mb-6">
-              {['pending', 'processing', 'shipped', 'delivered', 'cancelled'].map((status) => (
-                <button
-                  key={status}
-                  onClick={() => updateOrderStatus(selectedOrder.id, status)}
-                  className={`w-full px-4 py-3 rounded-lg text-left font-medium transition-colors ${
-                    selectedOrder.status === status
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={() => {
-                setShowModal(false);
-                setSelectedOrder(null);
-              }}
-              className="w-full btn-secondary"
-            >
-              Cancel
-            </button>
+          {/* Instructions */}
+          <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-6">
+            <h3 className="font-semibold text-blue-900 mb-2">How to Update Order Status</h3>
+            <ol className="list-decimal list-inside space-y-1 text-blue-800 text-sm">
+              <li>Use the dropdown in the "Actions" column to change an order's status</li>
+              <li>The status will update immediately and reflect on the customer's track order page</li>
+              <li>Use the filter buttons above to view orders by status</li>
+              <li>If you see a database warning, check your Supabase configuration</li>
+            </ol>
           </div>
         </div>
-      )}
+      </main>
     </div>
   );
 }
