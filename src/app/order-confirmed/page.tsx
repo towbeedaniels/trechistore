@@ -1,14 +1,21 @@
 "use client";
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
 
-export default function OrderConfirmedPage() {
+function OrderConfirmedContent() {
+  const searchParams = useSearchParams();
   const [orderNumber, setOrderNumber] = useState('');
 
   useEffect(() => {
-    setOrderNumber('TRECHI-' + Math.random().toString(36).substr(2, 9).toUpperCase());
-  }, []);
+    const order = searchParams.get('order');
+    if (order) {
+      setOrderNumber(order);
+    } else {
+      setOrderNumber('TRECHI-' + Math.random().toString(36).substr(2, 9).toUpperCase());
+    }
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
@@ -37,19 +44,43 @@ export default function OrderConfirmedPage() {
           <p className="text-sm text-blue-800">
             <strong>What's Next?</strong>
             <br />
-            A confirmation email has been sent to your email address. We'll notify you once your order ships.
+            You can track your order status anytime using the order number above. We'll also send updates to your email.
           </p>
         </div>
 
         <div className="space-y-3">
-          <Link href="/shop" className="btn-primary w-full block">
+          <Link 
+            href={`/track-order?order=${orderNumber}`} 
+            className="btn-primary w-full block"
+          >
+            Track Your Order
+          </Link>
+          <Link href="/shop" className="btn-secondary w-full block">
             Continue Shopping
           </Link>
-          <Link href="/" className="text-primary-600 hover:text-primary-700 font-medium">
-            Back to Home
-          </Link>
+        </div>
+        
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-500">
+            A confirmation email has been sent to your email address.
+          </p>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OrderConfirmedPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <OrderConfirmedContent />
+    </Suspense>
   );
 }

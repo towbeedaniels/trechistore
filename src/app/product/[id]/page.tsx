@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { products } from '@/data/products';
 import { useCart } from '@/contexts/CartContext';
 import ProductCard from '@/components/ProductCard';
+import { formatCurrency } from '@/lib/currency';
 
 export default function ProductPage() {
   const params = useParams();
@@ -110,9 +111,9 @@ export default function ProductPage() {
 
             {/* Price */}
             <div className="flex items-center gap-4 mb-6">
-              <span className="text-4xl font-bold text-primary-600">${product.price}</span>
+              <span className="text-4xl font-bold text-primary-600">{formatCurrency(product.price)}</span>
               {product.originalPrice && (
-                <span className="text-xl text-gray-400 line-through">${product.originalPrice}</span>
+                <span className="text-xl text-gray-400 line-through">{formatCurrency(product.originalPrice)}</span>
               )}
             </div>
 

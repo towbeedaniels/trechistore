@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Product } from '@/data/products';
 import { useCart } from '@/contexts/CartContext';
+import { formatCurrency } from '@/lib/currency';
 
 interface ProductCardProps {
   product: Product;
@@ -80,9 +81,9 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
 
         <div className="flex items-center gap-2 mt-3">
-          <span className="text-xl font-bold text-primary-600">${product.price}</span>
+          <span className="text-xl font-bold text-primary-600">{formatCurrency(product.price)}</span>
           {product.originalPrice && (
-            <span className="text-sm text-gray-400 line-through">${product.originalPrice}</span>
+            <span className="text-sm text-gray-400 line-through">{formatCurrency(product.originalPrice)}</span>
           )}
         </div>
       </div>

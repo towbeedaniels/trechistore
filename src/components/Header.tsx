@@ -27,6 +27,9 @@ export default function Header() {
             <Link href="/shop" className="text-gray-700 hover:text-primary-600 transition-colors">
               Shop
             </Link>
+            <Link href="/track-order" className="text-gray-700 hover:text-primary-600 transition-colors">
+              Track Order
+            </Link>
             <Link href="/about" className="text-gray-700 hover:text-primary-600 transition-colors">
               About
             </Link>
@@ -91,6 +94,13 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Shop
+              </Link>
+              <Link
+                href="/track-order"
+                className="text-gray-700 hover:text-primary-600 transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Track Order
               </Link>
               <Link
                 href="/about"

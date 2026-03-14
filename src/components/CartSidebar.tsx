@@ -3,6 +3,7 @@
 import { useCart } from '@/contexts/CartContext';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { formatCurrency } from '@/lib/currency';
 
 export default function CartSidebar() {
   const { items, isCartOpen, closeCart, removeFromCart, updateQuantity, totalPrice } = useCart();
@@ -80,7 +81,7 @@ export default function CartSidebar() {
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900">{item.name}</h3>
                       <p className="text-sm text-gray-500">{item.brand}</p>
-                      <p className="text-primary-600 font-medium mt-1">${item.price}</p>
+                      <p className="text-primary-600 font-medium mt-1">{formatCurrency(item.price)}</p>
                       
                       <div className="flex items-center gap-3 mt-2">
                         <button
@@ -124,7 +125,7 @@ export default function CartSidebar() {
             <div className="border-t p-6 space-y-4">
               <div className="flex items-center justify-between text-lg">
                 <span className="font-medium text-gray-700">Subtotal</span>
-                <span className="font-bold text-gray-900">${totalPrice.toFixed(2)}</span>
+                <span className="font-bold text-gray-900">{formatCurrency(totalPrice)}</span>
               </div>
               <p className="text-sm text-gray-500">Shipping and taxes calculated at checkout</p>
               <Link

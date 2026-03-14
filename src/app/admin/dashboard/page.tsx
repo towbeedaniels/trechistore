@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { Order } from '@/lib/supabase';
+import { formatCurrency } from '@/lib/currency';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -184,7 +185,7 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
-                  <p className="text-3xl font-bold text-green-600">${stats.totalRevenue.toFixed(2)}</p>
+                  <p className="text-3xl font-bold text-green-600">{formatCurrency(stats.totalRevenue)}</p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                   <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -255,7 +256,7 @@ export default function AdminDashboard() {
                           {order.customer_name}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          ${order.total.toFixed(2)}
+                          {formatCurrency(order.total)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-3 py-1 text-xs font-medium rounded-full ${

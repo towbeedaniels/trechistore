@@ -6,6 +6,7 @@ import { useCart } from '@/contexts/CartContext';
 import Link from 'next/link';
 import { countries } from '@/data/countries';
 import { supabase } from '@/lib/supabase';
+import { formatCurrency } from '@/lib/currency';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -21,15 +22,15 @@ export default function CheckoutPage() {
     city: '',
     state: '',
     zipCode: '',
-    country: 'United States',
+    country: 'Nigeria',
     cardNumber: '',
     cardName: '',
     expiryDate: '',
     cvv: '',
   });
 
-  const shipping = totalPrice > 100 ? 0 : 15;
-  const tax = totalPrice * 0.08;
+  const shipping = totalPrice > 50000 ? 0 : 3000;
+  const tax = 0; // No tax for Nigeria
   const grandTotal = totalPrice + shipping + tax;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -83,9 +84,9 @@ export default function CheckoutPage() {
         if (itemsError) throw itemsError;
       }
 
-      // Clear cart and redirect (works even without Supabase)
+      // Clear cart and redirect
       clearCart();
-      router.push(`/order-confirmed?order=${orderNumber}`);
+      router.push(`/track-order?order=${orderNumber}`);
     } catch (error) {
       console.error('Order error:', error);
       alert('There was an error processing your order. Please try again.');
@@ -423,7 +424,7 @@ export default function CheckoutPage() {
                     className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={isProcessing}
                   >
-                    {isProcessing ? 'Processing...' : (step === 3 ? `Place Order - $${grandTotal.toFixed(2)}` : 'Continue')}
+                    {isProcessing ? 'Processing...' : (step === 3 ? `Place Order - ${formatCurrency(grandTotal)}` : 'Continue')}
                   </button>
                 </div>
               </div>
@@ -446,7 +447,7 @@ export default function CheckoutPage() {
                         <p className="font-medium text-gray-900 text-sm">{item.name}</p>
                         <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                         <p className="text-primary-600 font-medium text-sm">
-                          ${(item.price * item.quantity).toFixed(2)}
+                          {formatCurrency(item.price * item.quantity)}
                         </p>
                       </div>
                     </div>
@@ -456,25 +457,25 @@ export default function CheckoutPage() {
                 <div className="border-t pt-4 space-y-2">
                   <div className="flex justify-between text-gray-600">
                     <span>Subtotal</span>
-                    <span>${totalPrice.toFixed(2)}</span>
+                    <span>{formatCurrency(totalPrice)}</span>
                   </div>
                   <div className="flex justify-between text-gray-600">
                     <span>Shipping</span>
-                    <span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
+                    <span>{shipping === 0 ? 'Free' : formatCurrency(shipping)}</span>
                   </div>
                   <div className="flex justify-between text-gray-600">
                     <span>Tax</span>
-                    <span>${tax.toFixed(2)}</span>
+                    <span>{tax === 0 ? '₦0' : formatCurrency(tax)}</span>
                   </div>
                   <div className="border-t pt-2 flex justify-between text-lg font-bold text-gray-900">
                     <span>Total</span>
-                    <span>${grandTotal.toFixed(2)}</span>
+                    <span>{formatCurrency(grandTotal)}</span>
                   </div>
                 </div>
 
                 {shipping > 0 && (
                   <p className="text-sm text-gray-500 mt-4">
-                    Add ${(100 - totalPrice).toFixed(2)} more for free shipping!
+                    Add {formatCurrency(50000 - totalPrice)} more for free shipping!
                   </p>
                 )}
               </div>

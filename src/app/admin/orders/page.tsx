@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase, Order } from '@/lib/supabase';
+import { formatCurrency } from '@/lib/currency';
 
 export default function AdminOrders() {
   const router = useRouter();
@@ -170,7 +171,7 @@ export default function AdminOrders() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{order.customer_email}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{order.shipping_country}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${order.total.toFixed(2)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{formatCurrency(order.total)}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-3 py-1 text-xs font-medium rounded-full ${
                             order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
