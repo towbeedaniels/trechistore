@@ -33,23 +33,25 @@ export default function AdminDashboard() {
   const fetchDashboardData = async () => {
     try {
       // Fetch orders
-      const { data: orders, error } = await supabase
-        .from('orders')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
+      const { data: orders, error } = supabase
+        ? await supabase
+            .from('orders')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(10)
+        : { data: null, error: null };
 
       // Fetch products count
-      const { count: productsCount } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true });
+      const { count: productsCount } = supabase
+        ? await supabase
+            .from('products')
+            .select('*', { count: 'exact', head: true })
+        : { count: 0 };
 
       // Calculate stats
       const totalOrders = orders?.length || 0;
-      const pendingOrders = orders?.filter(o => o.status === 'pending').length || 0;
-      const totalRevenue = orders?.reduce((sum, o) => sum + o.total, 0) || 0;
+      const pendingOrders = orders?.filter((o: Order) => o.status === 'pending').length || 0;
+      const totalRevenue = orders?.reduce((sum: number, o: Order) => sum + o.total, 0) || 0;
 
       setStats({
         totalOrders,

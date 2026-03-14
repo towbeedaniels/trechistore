@@ -42,46 +42,48 @@ export default function CheckoutPage() {
     const orderNumber = 'TRECHI-' + Math.random().toString(36).substr(2, 9).toUpperCase();
     
     try {
-      // Insert order into Supabase
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert([{
-          order_number: orderNumber,
-          customer_name: `${formData.firstName} ${formData.lastName}`,
-          customer_email: formData.email,
-          customer_phone: formData.phone,
-          shipping_address: formData.address,
-          shipping_city: formData.city,
-          shipping_state: formData.state,
-          shipping_zip: formData.zipCode,
-          shipping_country: formData.country,
-          subtotal: totalPrice,
-          shipping_cost: shipping,
-          tax: tax,
-          total: grandTotal,
-          status: 'pending'
-        }])
-        .select()
-        .single();
+      if (supabase) {
+        // Insert order into Supabase
+        const { data: orderData, error: orderError } = await supabase
+          .from('orders')
+          .insert([{
+            order_number: orderNumber,
+            customer_name: `${formData.firstName} ${formData.lastName}`,
+            customer_email: formData.email,
+            customer_phone: formData.phone,
+            shipping_address: formData.address,
+            shipping_city: formData.city,
+            shipping_state: formData.state,
+            shipping_zip: formData.zipCode,
+            shipping_country: formData.country,
+            subtotal: totalPrice,
+            shipping_cost: shipping,
+            tax: tax,
+            total: grandTotal,
+            status: 'pending'
+          }])
+          .select()
+          .single();
 
-      if (orderError) throw orderError;
+        if (orderError) throw orderError;
 
-      // Insert order items
-      const orderItems = items.map(item => ({
-        order_id: orderData.id,
-        product_id: item.id,
-        product_name: item.name,
-        quantity: item.quantity,
-        price: item.price
-      }));
+        // Insert order items
+        const orderItems = items.map(item => ({
+          order_id: orderData.id,
+          product_id: item.id,
+          product_name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        }));
 
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
+        const { error: itemsError } = await supabase
+          .from('order_items')
+          .insert(orderItems);
 
-      if (itemsError) throw itemsError;
+        if (itemsError) throw itemsError;
+      }
 
-      // Clear cart and redirect
+      // Clear cart and redirect (works even without Supabase)
       clearCart();
       router.push(`/order-confirmed?order=${orderNumber}`);
     } catch (error) {

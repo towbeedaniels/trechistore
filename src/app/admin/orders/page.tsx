@@ -25,6 +25,11 @@ export default function AdminOrders() {
 
   const fetchOrders = async () => {
     try {
+      if (!supabase) {
+        setOrders([]);
+        return;
+      }
+      
       let query = supabase.from('orders').select('*');
       
       if (filter !== 'all') {
@@ -42,6 +47,11 @@ export default function AdminOrders() {
 
   const updateOrderStatus = async (orderId: number, status: string) => {
     try {
+      if (!supabase) {
+        alert('Database not configured');
+        return;
+      }
+      
       const { error } = await supabase
         .from('orders')
         .update({ status })

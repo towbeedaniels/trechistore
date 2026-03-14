@@ -42,7 +42,9 @@ export default function AdminProducts() {
 
   const fetchProducts = async () => {
     try {
-      const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+      const { data, error } = supabase
+        ? await supabase.from('products').select('*').order('created_at', { ascending: false })
+        : { data: [], error: null };
       if (error) throw error;
       setProducts(data || []);
     } catch (error) {
@@ -118,6 +120,11 @@ export default function AdminProducts() {
     };
 
     try {
+      if (!supabase) {
+        alert('Database not configured');
+        return;
+      }
+      
       if (editingProduct) {
         const { error } = await supabase.from('products').update(productData).eq('id', editingProduct.id);
         if (error) throw error;
@@ -138,6 +145,11 @@ export default function AdminProducts() {
     if (!confirm('Are you sure you want to delete this product?')) return;
     
     try {
+      if (!supabase) {
+        alert('Database not configured');
+        return;
+      }
+      
       const { error } = await supabase.from('products').delete().eq('id', id);
       if (error) throw error;
       fetchProducts();

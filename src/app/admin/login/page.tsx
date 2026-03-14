@@ -30,11 +30,13 @@ export default function AdminLoginPage() {
       }
 
       // Get admin user from Supabase
-      const { data: adminUser, error: fetchError } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('email', email)
-        .single();
+      const { data: adminUser, error: fetchError } = supabase
+        ? await supabase
+            .from('admin_users')
+            .select('*')
+            .eq('email', email)
+            .single()
+        : { data: null, error: null };
 
       if (fetchError || !adminUser) {
         setError('Invalid email or password');
