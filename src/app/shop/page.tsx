@@ -13,7 +13,7 @@ function ShopContent() {
   const [selectedBrand, setSelectedBrand] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 200000]);
 
   const filteredProducts = useMemo(() => {
     let result = products.filter((product) => {
@@ -141,14 +141,15 @@ function ShopContent() {
                 <input
                   type="range"
                   min="0"
-                  max="500"
+                  max="200000"
+                  step="5000"
                   value={priceRange[1]}
                   onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
                 />
                 <div className="flex items-center justify-between text-sm text-gray-600">
-                  <span>${priceRange[0]}</span>
-                  <span className="font-medium text-primary-600">${priceRange[1]}+</span>
+                  <span>₦{priceRange[0].toLocaleString()}</span>
+                  <span className="font-medium text-primary-600">₦{priceRange[1].toLocaleString()}+</span>
                 </div>
               </div>
             </div>
@@ -159,7 +160,7 @@ function ShopContent() {
                 setSelectedCategory('All');
                 setSelectedBrand('All');
                 setSearchQuery('');
-                setPriceRange([0, 500]);
+                setPriceRange([0, 200000]);
                 setSortBy('featured');
               }}
               className="w-full btn-secondary py-2"
@@ -225,7 +226,7 @@ function ShopContent() {
                     setSelectedCategory('All');
                     setSelectedBrand('All');
                     setSearchQuery('');
-                    setPriceRange([0, 500]);
+                    setPriceRange([0, 200000]);
                   }}
                   className="btn-primary"
                 >
